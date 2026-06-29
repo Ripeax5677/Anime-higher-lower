@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Higher Lower Anime Edition - Popularität</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Impact', 'Segoe UI', -apple-system, sans-serif;
+            background-color: #050b14;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0));
+            padding: 20px;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+            background: linear-gradient(to right, #38bdf8, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .developer-tag {
+            font-size: 12px;
+            color: #94a3b8;
+            font-family: monospace;
+            margin-top: 5px;
+            letter-spacing: 2px;
+            text-transform: none;
+            -webkit-text-fill-color: initial;
+        }
+
+        .game-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            .vs-divider {
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+            }
+        }
+
+        .split-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .split-card.left {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-right: 2px solid #334155;
+        }
+
+        .split-card.right {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f051d 100%);
+        }
+
+        .anime-title {
+            font-size: 42px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            max-width: 80%;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .anime-meta {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 16px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            font-size: 72px;
+            font-weight: 900;
+            color: #38bdf8;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+        }
+
+        .right .score-display {
+            color: #a855f7;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 280px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            border: 2px solid transparent;
+            padding: 16px 30px;
+            font-size: 16px;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .btn-higher {
+            background-color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+        .btn-higher:hover { 
+            background-color: transparent; 
+            border-color: #10b981; 
+            color: #10b981;
+            transform: scale(1.05);
+        }
+
+        .btn-lower {
+            background-color: #ef4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+        .btn-lower:hover { 
+            background-color: transparent; 
+            border-color: #ef4444; 
+            color: #ef4444;
+            transform: scale(1.05);
+        }
+
+        .vs-divider {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f59e0b;
+            color: #050b14;
+            font-weight: 900;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 4px solid #050b14;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+            z-index: 10;
+        }
+
+        /* Stats HUD */
+        .stats-hud {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 20;
+            background-color: rgba(15, 23, 42, 0.85);
+            padding: 10px 30px;
+            border-radius: 50px;
+            border: 1px solid #334155;
+            backdrop-filter: blur(10px);
+        }
+
+        .hud-box {
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .hud-label { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 1px;}
+        .hud-val { font-size: 18px; font-weight: 700; color: #e2e8f0; }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(5, 11, 20, 0.95);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+
+        .overlay.visible { opacity: 1; pointer-events: auto; }
+        
+        .modal {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            padding: 50px; border-radius: 24px;
+            text-align: center; max-width: 500px; width: 90%; 
+            border: 2px solid #ef4444;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+
+        .modal h2 { color: #ef4444; font-size: 36px; margin-top: 0; letter-spacing: 2px; }
+        .btn-restart { 
+            background-color: #3b82f6; 
+            width: 100%; 
+            margin-top: 25px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        .btn-restart:hover { background-color: #2563eb; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">Higher Lower Anime Edition</div>
+        <div class="developer-tag">dev: 404notfound_____._</div>
+    </header>
+
+    <div class="game-container">
+        <div class="vs-divider">VS</div>
+        
+        <!-- Linker Anime (Bekannt) -->
+        <div class="split-card left">
+            <div class="anime-title" id="title-current">-</div>
+            <div class="anime-meta">hat den Popularitäts-Rang:</div>
+            <div class="score-display" id="rank-current"># -</div>
+        </div>
+
+        <!-- Rechter Anime (Raten) -->
+        <div class="split-card right">
+            <div class="anime-title" id="title-next">-</div>
+            <div class="anime-meta">ist auf MyAnimeList...</div>
+            
+            <div class="button-group" id="action-buttons">
+                <button class="btn btn-higher" onclick="makeGuess('higher')">▲ Populärer (Platz näher an #1)</button>
+                <button class="btn btn-lower" onclick="makeGuess('lower')">▼ Unpopulärer (Platz weiter hinten)</button>
+            </div>
+            
+            <div class="score-display" id="rank-next" style="display: none;"># -</div>
+        </div>
+    </div>
+
+    <!-- HUD Stats am Boden schwebend -->
+    <div class="stats-hud">
+        <div class="hud-box"><div class="hud-label">Score</div><div class="hud-val" id="stat-score">0</div></div>
+        <div style="color: #334155; font-size: 20px;">|</div>
+        <div class="hud-box"><div class="hud-label">Max</div><div class="hud-val" id="stat-max">0</div></div>
+        <div style="color: #334155; font-size: 20px;">|</div>
+        <div class="hud-box"><div class="hud-label">Min</div><div class="hud-val" id="stat-min">0</div></div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="overlay" id="game-over-overlay">
+        <div class="modal">
+            <h2>GAME OVER!</h2>
+            <p id="game-over-reason" style="margin-bottom: 25px; color: #94a3b8; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.5;"></p>
+            <div style="font-size: 24px; font-weight: 900; margin-bottom: 10px;">
+                DEIN ENDSCORE: <span id="final-score" style="color: #38bdf8;">0</span>
+            </div>
+            <button class="btn btn-restart" onclick="restartGame()">Nochmal versuchen</button>
+        </div>
+    </div>
+
+    <script>
+        // MASSIV ERWEITERTES DATASET (Über 40 bekannte Anime-Serien mit echten MAL-Rängen)
+        const animeDataset = [
+            { title: "Attack on Titan", rank: 1 },
+            { title: "Death Note", rank: 2 },
+            { title: "Fullmetal Alchemist: Brotherhood", rank: 4 },
+            { title: "One Punch Man", rank: 5 },
+            { title: "Sword Art Online", rank: 6 },
+            { title: "My Hero Academia", rank: 7 },
+            { title: "Naruto", rank: 8 },
+            { title: "Demon Slayer", rank: 9 },
+            { title: "Hunter x Hunter (2011)", rank: 10 },
+            { title: "Tokyo Ghoul", rank: 11 },
+            { title: "No Game No Life", rank: 12 },
+            { title: "Steins;Gate", rank: 13 },
+            { title: "Your Name.", rank: 15 },
+            { title: "Naruto Shippuden", rank: 16 },
+            { title: "Code Geass", rank: 18 },
+            { title: "One Piece", rank: 20 },
+            { title: "Jujutsu Kaisen", rank: 22 },
+            { title: "Chainsaw Man", rank: 30 },
+            { title: "Mob Psycho 100", rank: 31 },
+            { title: "Bleach", rank: 35 },
+            { title: "Cowboy Bebop", rank: 42 },
+            { title: "Neon Genesis Evangelion", rank: 48 },
+            { title: "Black Clover", rank: 56 },
+            { title: "Spy x Family", rank: 65 },
+            { title: "Re:Zero", rank: 45 },
+            { title: "Kaguya-sama: Love is War", rank: 52 },
+            { title: "Dr. Stone", rank: 61 },
+            { title: "Kill la Kill", rank: 73 },
+            { title: "Vinland Saga", rank: 90 },
+            { title: "Fairy Tail", rank: 27 },
+            { title: "Tokyo Revengers", rank: 114 },
+            { title: "Blue Exorcist", rank: 44 },
+            { title: "Soul Eater", rank: 54 },
+            { title: "Cyberpunk: Edgerunners", rank: 147 },
+            { title: "Frieren: Beyond Journey's End", rank: 174 },
+            { title: "Solo Leveling", rank: 180 },
+            { title: "Another", rank: 68 },
+            { title: "Akame ga Kill!", rank: 23 },
+            { title: "Elfen Lied", rank: 34 },
+            { title: "Deadman Wonderland", rank: 71 },
+            { title: "Bungou Stray Dogs", rank: 122 },
+            { title: "Overlord", rank: 57 },
+            { title: "Hell's Paradise", rank: 310 }
+        ];
+
+        let availableAnime = [];
+        let currentAnime = null;
+        let nextAnime = null;
+        let score = 0;
+        let maxScore = 0;
+        let minScore = 0;
+        let scoresHistory = [];
+
+        function initGame() {
+            availableAnime = [...animeDataset];
+            shuffleArray(availableAnime);
+            currentAnime = availableAnime.pop();
+            nextAnime = availableAnime.pop();
+            score = 0;
+            document.getElementById('stat-score').innerText = score;
+            updateUI();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('title-current').innerText = currentAnime.title;
+            document.getElementById('rank-current').innerText = "#" + currentAnime.rank;
+            document.getElementById('title-next').innerText = nextAnime.title;
+            document.getElementById('rank-next').style.display = 'none';
+            document.getElementById('action-buttons').style.display = 'flex';
+        }
+
+        function makeGuess(guess) {
+            const currentRank = currentAnime.rank;
+            const nextRank = nextAnime.rank;
+            
+            document.getElementById('rank-next').innerText = "#" + nextRank;
+            document.getElementById('rank-next').style.display = 'block';
+            document.getElementById('action-buttons').style.display = 'none';
+
+            // Logik: Ein kleinerer Rang-Wert (z.B. Platz 1 statt 10) bedeutet POPULÄRER (higher)
+            let isCorrect = false;
+            if (guess === 'higher' && nextRank <= currentRank) {
+                isCorrect = true;
+            } else if (guess === 'lower' && nextRank >= currentRank) {
+                isCorrect = true;
+            }
+
+            setTimeout(() => {
+                if (isCorrect) {
+                    score++;
+                    scoresHistory.push(score);
+                    if (score > maxScore) maxScore = score;
+                    
+                    document.getElementById('stat-score').innerText = score;
+                    document.getElementById('stat-max').innerText = maxScore;
+                    
+                    currentAnime = nextAnime;
+                    if (availableAnime.length > 0) {
+                        nextAnime = availableAnime.pop();
+                        updateUI();
+                    } else {
+                        availableAnime = animeDataset.filter(a => a.title !== currentAnime.title);
+                        shuffleArray(availableAnime);
+                        nextAnime = availableAnime.pop();
+                        updateUI();
+                    }
+                } else {
+                    minScore = scoresHistory.length === 0 ? 0 : Math.min(...scoresHistory, 0);
+                    document.getElementById('stat-min').innerText = minScore;
+                    document.getElementById('final-score').innerText = score;
+                    document.getElementById('game-over-reason').innerHTML = 
+                        `<strong>${nextAnime.title}</strong> steht auf Platz <strong>#${nextRank}</strong>.<br>Damit ist es weniger populär als <strong>${currentAnime.title}</strong> (#${currentRank}).`;
+                    document.getElementById('game-over-overlay').classList.add('visible');
+                }
+            }, 1200);
+        }
+
+        function restartGame() {
+            document.getElementById('game-over-overlay').classList.remove('visible');
+            initGame();
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
